@@ -1,5 +1,5 @@
-var camera, scene, renderer;
-var mesh;
+var camera, scene, renderer, mesh;
+var largeSphere;
 
 init();
 animate();
@@ -12,10 +12,18 @@ function init() {
   document.body.appendChild( renderer.domElement );
   
   camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 1, 1000 );
-  camera.position.z = 400;
+  camera.position.z = 40;
 
   scene = new THREE.Scene();
   scene.background = new THREE.Color(0x111111);
+
+  var sphereGeometry = new THREE.SphereGeometry( 12, 12, 12 );
+  var sphereMaterial = new THREE.MeshBasicMaterial( {color: 0xffffff,
+    wireframe: true,
+    transparent: true,
+    opacity: .1} );
+  largeSphere = new THREE.Mesh( sphereGeometry, sphereMaterial );
+   scene.add( largeSphere );
 
   background_particles(1, true, .75, true, new THREE.Color(0xffffff), 10000)
 
@@ -50,10 +58,16 @@ function onWindowResize() {
 
 }
 
+function onMouseMove(){
+  
+}
+
 function animate() {
   starField.rotation.x += 0.0001;
   starField.rotation.y += 0.0001;
   starField.rotation.x += 0.0001;
+
+  largeSphere.rotation.z += 0.001;
   
   requestAnimationFrame( animate );
   renderer.render( scene, camera );
