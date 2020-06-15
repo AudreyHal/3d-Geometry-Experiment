@@ -2,10 +2,13 @@ let camera, scene, renderer, mesh;
 let largeSphere;
 let orbitingPiecesArray=[]
 let speedFactor=0;
+let raycaster = new THREE.Raycaster();
+let mouse = new THREE.Vector2();
 
 init();
 animate();
 window.addEventListener( 'resize', onWindowResize, false );
+window.addEventListener('click', onMouseMove, false)
 
 function init() {
   renderer = new THREE.WebGLRenderer( { antialias: true } );
@@ -15,16 +18,18 @@ function init() {
   
   camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 1, 1000 );
   camera.position.z = 35;
+  
 
   scene = new THREE.Scene();
   scene.background = new THREE.Color(0x111111);
 
+  // Create large centered sphere and add to scene
   const sphereGeometry = new THREE.SphereGeometry( 12, 12, 12 );
   const sphereMaterial = new THREE.MeshBasicMaterial( {color: 0xffffff,
     wireframe: true,
     transparent: true,
     opacity: .1} );
-  largeSphere = new THREE.Mesh( sphereGeometry, sphereMaterial );
+   largeSphere = new THREE.Mesh( sphereGeometry, sphereMaterial );
    scene.add( largeSphere );
 
   background_particles(1, true, .75, true, new THREE.Color(0xffffff), 10000);
@@ -33,6 +38,7 @@ function init() {
 }
 
 function background_particles(size, transparent, opacity, sizeAttenuation, color, nbParticles) {
+  // Create star field background and add to scene
   const starsGeometry = new THREE.Geometry();
   for (let i = 0; i < nbParticles; i++) {
       const star = new THREE.Vector3();
@@ -264,16 +270,83 @@ function createClickables(){
 }
 
 
+
+function handleClickOrbitingPiece(element){
+ 
+  const delay  = .25
+  element.isClicked=true
+  gsap.to(element.material, 1, {
+    opacity: .05,
+    ease: Expo.easeInOut,
+    delay: delay
+});
+    gsap.to(element.scale, 1, {
+      x: element.scaleAnimation.x,
+      y: element.scaleAnimation.y,
+      z: element.scaleAnimation.z,
+      delay: delay,
+    })
+    gsap.to(element.position, 1, {
+      x: element.positionAnimation.x,
+      y: element.positionAnimation.y,
+      ease: Expo.easeInOut,
+      delay: delay
+  });
+  gsap.to(largeSphere.scale, 1, {
+      x: 0.0001,
+      y: 0.0001,
+      z: 0.0001,
+      ease: Expo.easeInOut,
+      onComplete: function() {
+        largeSphere.isVisible = false;
+      }
+  });
+  for (var i = 0; i < orbitingPiecesArray.length; i++) {
+    if (!orbitingPiecesArray[i].isClicked) {
+        gsap.to(orbitingPiecesArray[i].scale, 2, {
+            x: 0.0001,
+            y: 0.0001,
+            z: 0.0001,
+            ease: Expo.easeInOut,
+            onComplete: function() {
+                this.isVisible = false;
+            },
+           
+        });
+    }
+}
+ 
+}
+
+function onMouseMove( event ) {
+
+	mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+  mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+  
+
+  // update the picking ray with the camera and mouse position
+	raycaster.setFromCamera( mouse, camera );
+
+	// calculate objects intersecting the picking ray.i.e Get the object being clicked.
+	var intersects = raycaster.intersectObjects( orbitingPiecesArray );
+
+	for ( var i = 0; i < intersects.length; i++ ) {
+
+    handleClickOrbitingPiece(intersects[ i ].object)
+
+	}
+
+}
+
+
 function onWindowResize() {
+  // Adjust the canvas dimensions in response to change in window size
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize( window.innerWidth, window.innerHeight );
 
 }
 
-function onMouseMove(){
-
-}
 
 function animate() {
   starField.rotation.x += 0.0001;
@@ -283,18 +356,19 @@ function animate() {
   largeSphere.rotation.z += 0.001;
  
 
-  for (let i = 0; i < orbitingPiecesArray.length; i++){
-    console.log(orbitingPiecesArray[0]) 
-    // if (!!clickableArray[i].isClicked === false && !!orbitingPiecesArray[i].isVisible===true){ 
+  for (let i = 0; i < orbitingPiecesArray.length; i++){    
+    if (!!orbitingPiecesArray[i].isClicked === false && !!orbitingPiecesArray[i].isVisible===true){ 
          
-         speedFactor += 0.001;    
+        speedFactor += 0.001;    
         orbitingPiecesArray[i].rotation.z += 0.005;
         orbitingPiecesArray[i].rotation.x += 0.005;  
         orbitingPiecesArray[i].position.x = Math.sin(.25 *  speedFactor + i / 1.45) * Math.PI * 6;
         orbitingPiecesArray[i].position.y = Math.cos(.25 * speedFactor  + i / 1.45) * Math.PI * 6; 
-        console.log("click")   
-    //  }
+         
+     }
     }  
+
+
   
   requestAnimationFrame( animate );
   renderer.render( scene, camera );
