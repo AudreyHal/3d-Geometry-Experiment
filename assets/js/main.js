@@ -6,6 +6,7 @@ let raycaster = new THREE.Raycaster();
 let mouse = new THREE.Vector2();
 
 init();
+initialTimelineAnimation()
 animate();
 window.addEventListener( 'resize', onWindowResize, false );
 window.addEventListener('click', onMouseMove, false)
@@ -35,6 +36,70 @@ function init() {
   background_particles(1, true, .75, true, new THREE.Color(0xffffff), 10000);
   createClickables()
   
+}
+
+function initialTimelineAnimation(){
+  var largeSphere_scale_TL = gsap.timeline();
+  var largeSphere_rotation_TL = gsap.timeline();
+  var orbitingPieces_TL = gsap.timeline();
+ 
+  largeSphere.isVisible = true;
+  largeSphere_scale_TL.fromTo(largeSphere.scale, 1, {
+      x: 0.0001,
+      y: 0.0001,
+      z: 0.0001
+  }, {
+      x: 1,
+      y: 1,
+      z: 1,
+      ease: Expo.easeInOut
+  });
+  largeSphere_rotation_TL.fromTo(largeSphere.rotation, 4, {
+      z: -3
+  }, {
+      z: 0,
+      ease: Expo.easeInOut
+  });
+    for (var i = 0; i < orbitingPiecesArray.length; i++) {
+      orbitingPiecesArray[i].isVisible = true;
+      orbitingPiecesArray[i].isClicked = false;
+      orbitingPieces_TL.add(
+        gsap.fromTo(
+          orbitingPiecesArray[i].scale,
+          1,
+          {
+            x: 0.0001,
+            y: 0.0001,
+            z: 0.0001,
+          },
+          {
+            x: 1,
+            y: 1,
+            z: 1,
+            ease: Expo.easeInOut,
+          }
+        ),
+        0 + i * 0.15
+      );
+      orbitingPieces_TL.add(
+        gsap.fromTo(
+          orbitingPiecesArray[i].rotation,
+          2,
+          {
+            x: 0,
+            y: -4,
+            z: -16,
+          },
+          {
+            x: 0,
+            y: 0,
+            z: 0,
+            ease: Power2.easeInOut,
+          }
+        ),
+        0 + i * 0.05
+      );
+    }
 }
 
 function background_particles(size, transparent, opacity, sizeAttenuation, color, nbParticles) {
@@ -271,8 +336,7 @@ function createClickables(){
 
 
 
-function handleClickOrbitingPiece(element){
- 
+function handleClickOrbitingPiece(element){ 
   const delay  = .25
   element.isClicked=true
   gsap.to(element.material, 1, {
@@ -314,15 +378,12 @@ function handleClickOrbitingPiece(element){
            
         });
     }
-}
- 
+  } 
 }
 
 function onMouseMove( event ) {
-
 	mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
-  mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
-  
+  mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;  
 
   // update the picking ray with the camera and mouse position
 	raycaster.setFromCamera( mouse, camera );
@@ -331,9 +392,7 @@ function onMouseMove( event ) {
 	var intersects = raycaster.intersectObjects( orbitingPiecesArray );
 
 	for ( var i = 0; i < intersects.length; i++ ) {
-
     handleClickOrbitingPiece(intersects[ i ].object)
-
 	}
 
 }
@@ -357,8 +416,7 @@ function animate() {
  
 
   for (let i = 0; i < orbitingPiecesArray.length; i++){    
-    if (!!orbitingPiecesArray[i].isClicked === false && !!orbitingPiecesArray[i].isVisible===true){ 
-         
+    if (!!orbitingPiecesArray[i].isClicked === false && !!orbitingPiecesArray[i].isVisible===true){          
         speedFactor += 0.001;    
         orbitingPiecesArray[i].rotation.z += 0.005;
         orbitingPiecesArray[i].rotation.x += 0.005;  
@@ -367,8 +425,6 @@ function animate() {
          
      }
     }  
-
-
   
   requestAnimationFrame( animate );
   renderer.render( scene, camera );
